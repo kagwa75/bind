@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import Goback from "../../components/goback";
 import NotificationCard from "../../components/NotificationCard";
 import { useGlobalContext } from "../../lib/GlobalProvider";
 import { fetchNotifications } from "../../lib/supabase";
@@ -60,13 +61,22 @@ const notifications = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {notificationList.map((item) => {
-            return (
-              <NotificationCard item={item} router={router} key={item?.id} />
-            );
-          })}
-        </ScrollView>
+        <>
+          <View>
+            <Goback title="Your Notifications Currently" router={router} />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {notificationList.map((item) => {
+                return (
+                  <NotificationCard
+                    item={item}
+                    router={router}
+                    key={item?.id}
+                  />
+                );
+              })}
+            </ScrollView>
+          </View>
+        </>
       )}
     </View>
   );

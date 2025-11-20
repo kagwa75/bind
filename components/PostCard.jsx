@@ -312,7 +312,7 @@ const PostCard = ({ item, router, currentUser, hasShadow }) => {
             {isVideo ? (
               <VideoView
                 player={player}
-                allowsFullscreen
+                fullscreenOptions
                 allowsPictureInPicture
                 style={{ width: "100%", height: 250, borderRadius: 12 }}
               />

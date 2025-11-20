@@ -1,4 +1,3 @@
-import { decode } from "base64-arraybuffer";
 import * as FileSystem from "expo-file-system";
 import { supabaseUrl } from ".";
 import { supabase } from "../lib/supabase";
@@ -12,18 +11,17 @@ export const uploadFile = async (
   try {
     let fileName = getFilePath(folderName, isImage, userId);
 
-    // Read file as base64
-    const fileBase64 = await FileSystem.readAsStringAsync(fileUri, {
-      encoding: FileSystem.EncodingType.Base64,
+    const formData = new FormData();
+    formData.append("file", {
+      uri: fileUri,
+      type: isImage ? "image/png" : "video/mp4",
+      name: fileName,
     });
-
-    // Convert base64 to ArrayBuffer
-    const fileData = decode(fileBase64);
 
     // Upload to Supabase storage
     const { data, error } = await supabase.storage
       .from("uploads")
-      .upload(fileName, fileData, {
+      .upload(fileName, formData, {
         cacheControl: "3600",
         upsert: true, // Changed to true to allow updates
         contentType: isImage ? "image/png" : "video/mp4",

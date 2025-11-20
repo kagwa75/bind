@@ -55,11 +55,12 @@ export const GlobalProvider = ({ children }) => {
       try {
         const {
           data: { session },
+          error,
         } = await supabase.auth.getSession();
         console.log("session data:", session);
-        if (!session || session == null) {
-          // User not logged in
-          router.replace("/(auth)/Welcome");
+        if (error) {
+          console.error("Session error:", error);
+          throw error;
         }
 
         if (session?.user) {
@@ -70,9 +71,13 @@ export const GlobalProvider = ({ children }) => {
           const profileData = await fetchUserProfile(session.user.id);
           if (profileData) {
             setUserProfile(profileData);
-            console.log("session data:", profileData);
+            console.log("profile data:", profileData);
             await storage.setItem("userProfile", JSON.stringify(profileData));
           }
+        } else {
+          console.log("No session found, redirecting to welcome");
+          // Only redirect if we're sure there's no session
+          router.replace("/(auth)/Welcome");
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);

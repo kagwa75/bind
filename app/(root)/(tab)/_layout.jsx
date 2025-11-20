@@ -1,20 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
-const TabIcon = ({ iconName, color, name, focused }) => {
+const TabIcon = ({ iconName, color, size, name, focused }) => {
   return (
     <View className="flex items-center justify-center gap-2 mt-3">
-      <Feather name={iconName} size={24} color={color} />
-      <Text
-        className={`${
-          focused ? "text-primary-300 font-rubik-medium" : "text-black"
-        } text-xs w-full flex mt-1 text-center`}
-        style={{ color: color }}
-      >
-        {name}
-      </Text>
+      <Feather name={iconName} size={size} color={color} />
     </View>
   );
 };
@@ -24,12 +16,13 @@ const TabLayout = () => {
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: "#FFA001",
-          tabBarInactiveTintColor: "#CDCDE0",
+          tabBarActiveTintColor: "#ea580c",
+          tabBarInactiveTintColor: "black",
           tabBarShowLabel: false,
           tabBarStyle: {
             backgroundColor: "white",
-            borderTopWidth: 1,
+            borderTopWidth: 0,
+            borderBottomWidth: 1,
             borderTopColor: "#0061FF1A",
             minHeight: 42,
           },
@@ -42,6 +35,7 @@ const TabLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
+                size={20}
                 iconName="home"
                 color={color}
                 name="Home"
@@ -58,9 +52,42 @@ const TabLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
+                size={25}
                 iconName="plus-square"
                 color={color}
                 name="Create"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Conversations"
+          options={{
+            title: "Convos",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                size={20}
+                iconName="send"
+                color={color}
+                name="Chats"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="BookMarks"
+          options={{
+            title: "BookMark",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                size={20}
+                iconName="bookmark"
+                color={color}
+                name="BookMark"
                 focused={focused}
               />
             ),

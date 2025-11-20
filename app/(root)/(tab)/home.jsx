@@ -53,18 +53,14 @@ const Home = () => {
   }, [limit, posts]); // Added limit as dependency
 
   return (
-    <View className="flex-1 bg-orange-300 pt-8">
+    <View className="flex-1 bg-{#FAFAFA} pt-4">
       <View className="flex flex-row justify-between gap-4 items-center">
-        <Text className="text-3xl pl-1 text-orange-600 font-bold">
-          Messenger
-        </Text>
+        <Text className="text-3xl pl-2 text-orange-600 font-extrabold">Bind</Text>
         <View className="flex flex-row items-center gap-4 space-x-3 p-2">
           <Pressable onPress={() => router.push("/(pressables)/notifications")}>
             <Feather name="bell" size={22} color="black" />
           </Pressable>
-          <Pressable onPress={() => router.push("/(pressables)/createPost")}>
-            <Feather name="plus-square" size={22} color="black" />
-          </Pressable>
+
           <ProfilePic
             uri={user?.image}
             onPress={() => router.push("/(pressables)/profile")}

@@ -24,43 +24,50 @@ const Login = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const router = useRouter();
 
-  // Create redirect URL for OAuth
-  const redirectUrl = AuthSession.makeRedirectUri({
-    scheme: "messager",
-    path: "redirect",
-  });
-
   useEffect(() => {
-    // Handle OAuth redirects when app is opened via deep link
-    const handleUrl = (event) => {
+    const handleUrl = async (event) => {
       const url = event.url;
-      console.log("url:", event);
-      // Extract access_token and refresh_token from URL if present
-      if (url.includes("access_token") || url.includes("refresh_token")) {
+      console.log("URL received:", url);
+
+      if (url.includes("access_token") && url.includes("refresh_token")) {
         setAuthLoading(true);
-        // The Supabase client will automatically handle the session from the URL
-        setTimeout(() => {
+
+        try {
+          // Extract tokens from URL
+          const params = new URLSearchParams(url.split("#")[1]);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+
+          if (accessToken && refreshToken) {
+            // Set the session
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (error) throw error;
+
+            console.log("Session set from deep link");
+            // Wait for GlobalProvider to update
+            setTimeout(() => {
+              router.replace("/(tab)/home");
+            }, 500);
+          }
+        } catch (error) {
+          console.error("Error handling URL:", error);
+          Alert.alert("Authentication Error", "Failed to complete login");
+        } finally {
           setAuthLoading(false);
-          router.replace("/(tab)/home");
-        }, 1000);
+        }
       }
     };
 
-    // Add event listener for deep links
     const subscription = Linking.addEventListener("url", handleUrl);
 
-    // Check if app was opened from a deep link
+    // Check initial URL
     Linking.getInitialURL().then((url) => {
-      console.log("deepLinkurl:", url);
-      if (
-        url &&
-        (url.includes("access_token") || url.includes("refresh_token"))
-      ) {
-        setAuthLoading(true);
-        setTimeout(() => {
-          setAuthLoading(false);
-          router.replace("/(tab)/home");
-        }, 1000);
+      if (url) {
+        handleUrl({ url });
       }
     });
 
@@ -100,39 +107,66 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
-    setAuthLoading(true);
     try {
-      console.log("redirectUrl:", redirectUrl);
+      setAuthLoading(true);
+
+      // Generate redirect URI for Expo Go
+      const redirectUrl = AuthSession.makeRedirectUri({
+        scheme: "messager",
+      });
+
+      console.log("Redirect URL:", redirectUrl);
+
+      // Get the OAuth URL from Supabase
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true, // 👈 prevents Supabase from calling location.assign()
           queryParams: {
             access_type: "offline",
             prompt: "consent",
           },
-          redirectTo: redirectUrl,
         },
       });
 
       if (error) throw error;
-      console.log("OAuth data:", data);
+      console.log("OAuth URL:", data?.url);
 
-      // Open the OAuth URL in a browser
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUrl,
-        );
+      // Manually open the auth session
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+      );
 
-        if (result.type === "success") {
-          console.log("browser Result:", result);
-          // The Supabase client will automatically handle the session from the URL
-          router.replace("/(tab)/home");
+      console.log("Auth session result:", result);
+
+      if (result.type === "success") {
+        const { url } = result;
+        // Extract parameters from URL
+        const params = new URLSearchParams(url.split("#")[1]);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          // Set the session manually
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+          if (sessionError) throw sessionError;
+
+          console.log("OAuth session set successfully");
+          // Wait a moment for GlobalProvider to detect the session
+          setTimeout(() => {
+            router.replace("/(tab)/home");
+          }, 500);
         }
       }
     } catch (error) {
-      Alert.alert("Google Login Error", error.message);
       console.error("Google login error:", error);
+      Alert.alert("Google Login Error", error.message);
     } finally {
       setAuthLoading(false);
     }
@@ -277,7 +311,7 @@ const Login = () => {
 
       {/* Forgot Password Link */}
       <TouchableOpacity
-        onPress={() => router.push("/forgot-password")}
+        onPress={() => router.push("/forgotPassword")}
         style={{ alignItems: "center", marginTop: 24 }}
       >
         <Text style={{ color: "#f97316" }}>Forgot password?</Text>

@@ -6,13 +6,13 @@ import { useRef, useState } from "react";
 import {
   Alert,
   Image,
-  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import Button from "../../../components/Button";
+import Goback from "../../../components/goback";
 import ProfilePic from "../../../components/ProfilePic";
 import TextEditor from "../../../components/TextEditor";
 import { uploadFile } from "../../../constants/ImageService";
@@ -140,30 +140,28 @@ const CreatePost = () => {
     player.play();
   });
   return (
-    <ScrollView className="p-4 bg-white flex-1">
-      <View className="flex flex-row items-center justify-between mb-6">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="bg-gray-100 p-2 rounded-full"
-        >
-          <Feather name="arrow-left" size={22} color="black" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-black">Create Post</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <ScrollView className="flex-1 bg-white p-4">
+      {/* Header */}
+      <Goback
+        title="Create Post"
+        router={router}
+        font="font-semibold text-2xl"
+      />
 
-      <View className="flex-row items-start mb-6">
+      {/* User Info */}
+      <View className="flex-row items-center mt-4 mb-6">
         <ProfilePic
           uri={user?.image}
           initials={getInitials(user?.email)}
           size={50}
         />
-        <View className="ml-3 mt-2">
-          <Text className="text-blue-500 font-medium">{user?.name}</Text>
-        </View>
+        <Text className="ml-3 text-blue-500 text-lg font-bold">
+          {user?.name}
+        </Text>
       </View>
 
-      <View className="mb-24">
+      {/* Post Body */}
+      <View className="mb-10">
         <TextEditor
           editorRef={editorRef}
           onChange={(body) => (bodyRef.current = body)}
@@ -171,54 +169,63 @@ const CreatePost = () => {
         />
       </View>
 
-      {/* Media preview */}
-      {file && (
-        <View className="flex mt-16 rounded-lg overflow-hidden p-8 bg-gray-100">
+      {/* Media Preview */}
+      {file && file.uri && (
+        <View className="relative mt-4 mb-8 rounded-lg overflow-hidden bg-gray-100">
           {fileType === "video" ? (
             <VideoView
               player={player}
-              allowsFullscreen
-              allowsPictureInPicture
-              style={{ width: 350, height: 275 }}
+              fullscreenOptions
+              style={{ width: "100%", height: 250 }}
             />
           ) : (
             <Image
               source={{ uri: file.uri }}
-              className="w-full h-64"
+              style={{ width: "100%", height: 250 }}
               resizeMode="cover"
             />
           )}
-          <Pressable
+          <TouchableOpacity
             onPress={removeFile}
-            className="absolute top-2 right-2 p-2 rounded-full bg-red-500"
+            className="absolute top-2 right-2 bg-red-500 p-2 rounded-full"
           >
-            <Feather name="x" size={18} color={"white"} />
-          </Pressable>
+            <Feather name="x" size={18} color="#fff" />
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Add media options */}
-      <View className="flex-row justify-between items-center p-4 border-t mt-20 elevation-md border-gray-200">
-        <Text className="text-lg font-medium text-gray-700">
+      {/* Add Media Buttons */}
+      <View className="flex-row justify-between items-center p-4 border-t border-gray-200">
+        <Text className="text-gray-700 text-lg font-medium">
           Add to your post
         </Text>
-        <View className="flex-row gap-4">
+        <View className="flex-row space-x-4">
           <TouchableOpacity
             onPress={() => onPick("image")}
             className="p-2 rounded-full bg-blue-100"
           >
-            <Feather name="image" size={22} color={"#3B82F6"} />
+            <Feather name="image" size={22} color="#3B82F6" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onPick("video")}
-            className="p-2 rounded-full bg-blue-100"
+            className="p-2 rounded-full bg-red-100"
           >
-            <Feather name="video" size={22} color={"#EF4444"} />
+            <Feather name="video" size={22} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View className="mt-8">
+      {/* Upload progress */}
+      {loading && (
+        <View className="my-4">
+          <Text className="text-center text-gray-500">
+            Uploading... {uploadProgress}%
+          </Text>
+        </View>
+      )}
+
+      {/* Post Button */}
+      <View className="mt-6 mb-10">
         <Button
           title={loading ? "Posting..." : "Post"}
           onPress={onSubmit}

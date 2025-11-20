@@ -9,7 +9,7 @@ const Welcome = () => {
     <ScreenWrapper bg={"blue-950"}>
       <View className={`flex-auto items-center justify-center bg-blue-950`}>
         <Text className="text-6xl font-extrabold text-blue-500 dark:text-blue-300">
-          Welcome
+          BIND
         </Text>
       </View>
       {/*

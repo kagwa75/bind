@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import * as Sharing from "expo-sharing";
 import { useVideoPlayer, VideoView } from "expo-video";
 import moment from "moment";
@@ -17,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Modalize } from "react-native-modalize";
 import { downloadFile } from "../constants/ImageService";
 import {
   addComment,
@@ -48,8 +48,8 @@ const PostCardWUser = ({ item, router, currentUser, hasShadow }) => {
 
   const playerRef = useRef(null);
   const bottomSheetRef = useRef(null);
-  const commentSheetRef = useRef(null);
-  const actionSheetRef = useRef(null);
+  const commentModalRef = useRef(null);
+  const actionModalRef = useRef(null);
   const shadowStyles = {
     shadowOffset: {
       width: 0,
@@ -301,7 +301,10 @@ const PostCardWUser = ({ item, router, currentUser, hasShadow }) => {
             {item.file.includes("mp4") ? (
               <VideoView
                 player={player}
-                allowsFullscreen
+                fullscreenOptions={{
+                  enabled: true, // replaces allowsFullscreen
+                  presentationStyle: "fullscreen", // optional
+                }}
                 allowsPictureInPicture
                 style={{ width: "100%", height: 250, borderRadius: 12 }}
               />
@@ -360,97 +363,67 @@ const PostCardWUser = ({ item, router, currentUser, hasShadow }) => {
           )}
         </View>
       </View>
-      {/* Comments Bottom Sheet */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
-        index={-1} // Start closed
-        enablePanDownToClose
-        backgroundStyle={{ backgroundColor: "white" }}
-      >
-        <BottomSheetView style={{ flex: 1 }}>
-          <View className="flex-1 px-5">
-            {/* Header */}
-            <View className="border-b border-gray-200 pb-4 mb-4">
-              <Text className="text-lg font-bold text-center">Comments</Text>
-            </View>
-
-            {/* Comments List */}
-            {isLoadingComments ? (
-              <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#3b82f6" />
-              </View>
-            ) : (
-              <FlatList
-                data={comments}
-                renderItem={renderComment}
-                keyExtractor={(item) => item.id}
-                inverted={false}
-                className="flex-1"
-                ListEmptyComponent={
-                  <View className="flex-1 justify-center items-center py-10">
-                    <Feather name="message-circle" size={40} color="#d1d5db" />
-                    <Text className="text-gray-500 mt-2">No comments yet</Text>
-                    <Text className="text-gray-400 text-sm">
-                      Be the first to comment!
-                    </Text>
-                  </View>
-                }
+      {/* Comments Modalize */}
+      <Modalize ref={commentModalRef} modalHeight={600}>
+        <View className="px-5 pt-5">
+          <Text className="text-lg font-bold text-center mb-4">Comments</Text>
+          {isLoadingComments ? (
+            <ActivityIndicator size="large" color="#3b82f6" />
+          ) : (
+            <FlatList
+              data={comments}
+              renderItem={renderComment}
+              keyExtractor={(item) => item.id?.toString()}
+              ListEmptyComponent={
+                <View className="justify-center items-center py-10">
+                  <Feather name="message-circle" size={40} color="#d1d5db" />
+                  <Text className="text-gray-500 mt-2">No comments yet</Text>
+                </View>
+              }
+            />
+          )}
+          {/* Comment input */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="border-t border-gray-200 pt-3 pb-5"
+          >
+            <View className="flex-row items-center">
+              <Avatar size={40} uri={currentUser?.image} />
+              <TextInput
+                value={newComment}
+                onChangeText={setNewComment}
+                placeholder="Write a comment..."
+                className="flex-1 ml-3 bg-gray-100 rounded-full px-4 py-2"
+                multiline
               />
-            )}
-
-            {/* Comment Input */}
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              className="border-t border-gray-200 pt-3 pb-5"
-            >
-              <View className="flex-row items-center">
-                <Avatar size={40} uri={currentUser?.image} />
-                <TextInput
-                  value={newComment}
-                  onChangeText={setNewComment}
-                  placeholder="Write a comment..."
-                  className="flex-1 ml-3 bg-gray-100 rounded-full px-4 py-2"
-                  multiline
-                  maxLength={500}
-                />
-                <TouchableOpacity
-                  onPress={submitComment}
-                  disabled={isSubmittingComment || !newComment.trim()}
-                  className="ml-2 p-2"
-                >
-                  {isSubmittingComment ? (
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  ) : (
-                    <Feather
-                      name="send"
-                      size={20}
-                      color={newComment.trim() ? "#3b82f6" : "#9ca3af"}
-                    />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-          </View>
-        </BottomSheetView>
-      </BottomSheet>
-      {/* Action Bottom Sheet */}
-      <BottomSheet
-        ref={actionSheetRef}
-        snapPoints={actionSnapPoints}
-        index={-1}
-        enablePanDownToClose
-        backgroundStyle={{ backgroundColor: "white" }}
-      >
-        <BottomSheetView style={{ padding: 20 }}>
+              <TouchableOpacity
+                onPress={submitComment}
+                disabled={isSubmittingComment || !newComment.trim()}
+                className="ml-2 p-2"
+              >
+                {isSubmittingComment ? (
+                  <ActivityIndicator size="small" color="#3b82f6" />
+                ) : (
+                  <Feather
+                    name="send"
+                    size={20}
+                    color={newComment.trim() ? "#3b82f6" : "#9ca3af"}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modalize>
+      {/* Actions Modalize */}
+      <Modalize ref={actionModalRef} adjustToContentHeight>
+        <View className="p-5">
           {currentUser?.id === item?.users?.id ? (
             <>
-              {/* Edit Button */}
               <TouchableOpacity
                 className="flex-row items-center gap-3 mb-4"
                 onPress={() => {
-                  actionSheetRef.current?.close();
-                  // navigate to edit post screen
+                  actionModalRef.current?.close();
                   router.push(`/(editpost)/${item.id}`);
                 }}
               >
@@ -458,29 +431,21 @@ const PostCardWUser = ({ item, router, currentUser, hasShadow }) => {
                 <Text className="text-base">Edit Post</Text>
               </TouchableOpacity>
 
-              {/* Delete Button */}
               <TouchableOpacity
                 className="flex-row items-center gap-3 mb-4"
                 onPress={() => {
-                  actionSheetRef.current?.close();
-                  Alert.alert(
-                    "Delete Post",
-                    "Are you sure you want to delete this post?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Delete",
-                        style: "destructive",
-                        onPress: async () => {
-                          const result = await deletePost(item?.id);
-                          if (result.success) {
-                            Alert.alert("Deleted your Post");
-                          }
-                          Alert.alert(result.error);
-                        },
+                  actionModalRef.current?.close();
+                  Alert.alert("Delete Post", "Are you sure?", [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: async () => {
+                        const result = await deletePost(item?.id);
+                        if (result.success) Alert.alert("Deleted your post");
                       },
-                    ],
-                  );
+                    },
+                  ]);
                 }}
               >
                 <Feather name="trash-2" size={20} color="red" />
@@ -489,45 +454,30 @@ const PostCardWUser = ({ item, router, currentUser, hasShadow }) => {
             </>
           ) : (
             <>
-              {/* About this Account */}
               <TouchableOpacity
                 className="flex-row items-center gap-3 mb-4"
                 onPress={() => {
-                  actionSheetRef.current?.close();
-                  router.push(`/profile/${item.users.id}`);
+                  actionModalRef.current?.close();
+                  router.push(`/(profile)/${item.users.id}`);
                 }}
               >
                 <Feather name="user" size={20} color="#6b7280" />
                 <Text className="text-base">About this Account</Text>
               </TouchableOpacity>
-
-              {/* Bookmark */}
               <TouchableOpacity
                 className="flex-row items-center gap-3 mb-4"
                 onPress={() => {
-                  actionSheetRef.current?.close();
+                  actionModalRef.current?.close();
                   console.log("Bookmark post:", item.id);
                 }}
               >
                 <Feather name="bookmark" size={20} color="#6b7280" />
                 <Text className="text-base">Bookmark</Text>
               </TouchableOpacity>
-
-              {/* Report */}
-              <TouchableOpacity
-                className="flex-row items-center gap-3"
-                onPress={() => {
-                  commentSheetRef.current?.close();
-                  Alert.alert("Report Post", "Thanks, we’ll review this post.");
-                }}
-              >
-                <Feather name="flag" size={20} color="#ef4444" />
-                <Text className="text-base text-red-500">Report</Text>
-              </TouchableOpacity>
             </>
           )}
-        </BottomSheetView>
-      </BottomSheet>
+        </View>
+      </Modalize>
     </>
   );
 };

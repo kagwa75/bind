@@ -217,7 +217,6 @@ const EditPost = () => {
       router.back();
     }
   };
-  const file = [image, video];
 
   if (loading) {
     return (
@@ -308,7 +307,7 @@ const EditPost = () => {
         </View>
 
         {/* Media Preview */}
-        {file && (
+        {(image || video) && (
           <View className="mx-4 mb-4 rounded-xl overflow-hidden border border-gray-200">
             <View className="flex-row justify-between items-center p-2 bg-black/10">
               <Text className="text-gray-700 font-medium">
@@ -323,7 +322,7 @@ const EditPost = () => {
               <VideoView
                 player={player}
                 style={{ width: "100%", height: 250 }}
-                allowsFullscreen
+                fullscreenOptions
               />
             ) : (
               <Image
@@ -357,7 +356,7 @@ const EditPost = () => {
               </Text>
             </TouchableOpacity>
 
-            {file && (
+            {(image || video) && (
               <TouchableOpacity
                 onPress={removeFile}
                 className="flex-row items-center bg-red-50 px-4 py-3 rounded-lg"
