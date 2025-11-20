@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,21 +10,51 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Modalize } from "react-native-modalize";
 import Avatar from "../../../components/avatar";
 import { useGlobalContext } from "../../../lib/GlobalProvider";
-import { getChatConversations } from "../../../lib/supabase";
+import { getAllUsers, getChatConversations } from "../../../lib/supabase";
 
 const ChatList = () => {
   const { user: currentUser } = useGlobalContext();
   const router = useRouter();
+  const [users, setUsers] = useState();
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const usersRef = useRef(null);
+
+  //modal
+  const openModal = () => {
+    console.log("Button pressed"); // Check if this logs
+    console.log("usersRef current:", usersRef.current); // Check if ref exists
+
+    if (usersRef.current) {
+      usersRef.current.open();
+    } else {
+      console.log("Modal ref is null");
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const results = await getAllUsers();
+      if (results) {
+        setUsers(results);
+      } else {
+        Alert.alert("Failed to fetch users", error.message || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Fetch users error:", error);
+      Alert.alert("Error", "Could not load users");
+    }
+  };
 
   useEffect(() => {
     if (currentUser?.id) {
       loadConversations();
     }
-  }, [currentUser?.id]);
+    fetchUsers();
+  }, [currentUser?.id, usersRef]);
 
   const loadConversations = async () => {
     if (!currentUser?.id) return;
@@ -91,6 +121,13 @@ const ChatList = () => {
         <Text className="text-2xl font-bold text-gray-900">Messages</Text>
         <Text className="text-gray-500 mt-1">Your conversations</Text>
       </View>
+      {/**floating plus button */}
+      <TouchableOpacity
+        onPress={openModal}
+        className="absolute bg-orange-400 p-4 w-20 h-20 rounded-full bottom-7 right-7 justify-center items-center"
+      >
+        <Feather name="plus" size={24} color={"black"} />
+      </TouchableOpacity>
 
       {/* Conversations List */}
       {isLoading ? (
@@ -120,6 +157,48 @@ const ChatList = () => {
           onRefresh={loadConversations}
         />
       )}
+      <Modalize ref={usersRef} modalHeight={600}>
+        <View className="p-4">
+          <Text className="text-xl font-semibold mb-4">Start New Chat</Text>
+
+          {!users ? (
+            <View className="items-center py-10">
+              <ActivityIndicator size="large" />
+            </View>
+          ) : (
+            <FlatList
+              data={users.filter((u) => u.id !== currentUser?.id)} // remove current user
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  className="flex-row items-center p-3 border-b border-gray-100"
+                  onPress={() => {
+                    usersRef.current?.close();
+                    router.push(`/(Chats)/${item.id}`);
+                  }}
+                >
+                  <Avatar uri={item?.image} size={55} />
+
+                  <View className="ml-3 flex-1">
+                    <Text className="text-lg font-semibold">
+                      {item.name || item.email?.split("@")[0]}
+                    </Text>
+
+                    <Text className="text-gray-500 text-sm">{item.email}</Text>
+                  </View>
+
+                  <Feather name="chevron-right" size={20} color="#9ca3af" />
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View className="items-center py-10">
+                  <Text className="text-gray-500">No users found</Text>
+                </View>
+              }
+            />
+          )}
+        </View>
+      </Modalize>
     </View>
   );
 };
