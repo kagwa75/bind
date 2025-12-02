@@ -13,7 +13,12 @@ import {
 import { Modalize } from "react-native-modalize";
 import Avatar from "../../../components/avatar";
 import { useGlobalContext } from "../../../lib/GlobalProvider";
-import { getAllUsers, getChatConversations } from "../../../lib/supabase";
+import {
+  getAllUsers,
+  getChatConversations,
+  supabase,
+  updateChats,
+} from "../../../lib/supabase";
 
 const ChatList = () => {
   const { user: currentUser } = useGlobalContext();
@@ -23,16 +28,36 @@ const ChatList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const usersRef = useRef(null);
 
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadConversations();
+    }
+    // Subscribe to new changes
+    const subscription = supabase
+      .channel("chat-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "chats",
+          filter: `or(senderid.eq.${currentUser.id},receiverid.eq.${currentUser.id})`,
+        },
+        (payload) => {
+          loadConversations();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [currentUser?.id, usersRef]);
   //modal
   const openModal = () => {
-    console.log("Button pressed"); // Check if this logs
-    console.log("usersRef current:", usersRef.current); // Check if ref exists
+    usersRef.current?.open();
 
-    if (usersRef.current) {
-      usersRef.current.open();
-    } else {
-      console.log("Modal ref is null");
-    }
+    fetchUsers();
   };
 
   const fetchUsers = async () => {
@@ -49,19 +74,13 @@ const ChatList = () => {
     }
   };
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadConversations();
-    }
-    fetchUsers();
-  }, [currentUser?.id, usersRef]);
-
   const loadConversations = async () => {
     if (!currentUser?.id) return;
 
     setIsLoading(true);
     try {
       const results = await getChatConversations(currentUser.id);
+      console.log("results:", results);
       setConversations(Array.isArray(results) ? results : []);
     } catch (error) {
       console.error("Error loading conversations:", error);
@@ -79,17 +98,44 @@ const ChatList = () => {
   const formatName = (user) => {
     return user?.name || user?.email?.split("@")[0] || "Unknown User";
   };
+  const openChat = async (otherUser, lastMessage) => {
+    try {
+      // Navigate to chat first (user experience)
+      router.push(`/(Chats)/${otherUser.id}`);
+
+      // Only update if message is unread
+      if (!lastMessage.isread) {
+        const update = {
+          isread: true,
+          updatedat: new Date().toISOString(),
+        };
+
+        const result = await updateChats(lastMessage.id, update);
+
+        if (result.success) {
+          console.log("Chat updated:", result.data);
+        } else {
+          console.error("Failed to update chat:", result.error);
+        }
+      }
+    } catch (error) {
+      console.error("Error in openChat:", error);
+    }
+  };
 
   const renderConversation = ({ item }) => {
     const otherUser = item.other_user;
     const lastMessage = item.last_message;
+    const unreadCount = item.unread_count || 0;
+    const sender = item.last_message.senderid === currentUser?.id;
 
     return (
       <TouchableOpacity
-        onPress={() => router.push(`/(Chats)/${otherUser.id}`)}
+        onPress={() => openChat(otherUser, lastMessage)}
         className="flex-row items-center p-4 border-b border-gray-100 bg-white"
       >
         <Avatar uri={otherUser?.image} size={60} />
+        <View className="absolute top-4 left-16 w-3 h-3 bg-green-500 rounded-full border border-white"></View>
 
         <View className="flex-1 ml-3">
           <Text className="text-lg font-semibold text-gray-900">
@@ -97,7 +143,9 @@ const ChatList = () => {
           </Text>
 
           {lastMessage && (
-            <Text className="text-gray-600 text-sm mt-1">
+            <Text
+              className={`${sender ? "text-blue-600" : "text-gray-600"} text-sm mt-1`}
+            >
               {getLastMessagePreview(lastMessage.content)}
             </Text>
           )}
@@ -108,8 +156,17 @@ const ChatList = () => {
             </Text>
           )}
         </View>
-
-        <Feather name="chevron-right" size={20} color="#9ca3af" />
+        {/* Unread count badge */}
+        {unreadCount > 0 && (
+          <View className="bg-orange-500 min-w-5 h-5 rounded-full items-center justify-center">
+            <Text className="text-white text-xs font-bold px-1">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Text>
+          </View>
+        )}
+        {unreadCount === 0 && (
+          <Feather name="chevron-right" size={20} color="#9ca3af" />
+        )}
       </TouchableOpacity>
     );
   };
@@ -125,6 +182,7 @@ const ChatList = () => {
       <TouchableOpacity
         onPress={openModal}
         className="absolute bg-orange-400 p-4 w-20 h-20 rounded-full bottom-7 right-7 justify-center items-center"
+        style={{ zIndex: 999, elevation: 20 }}
       >
         <Feather name="plus" size={24} color={"black"} />
       </TouchableOpacity>
@@ -157,7 +215,14 @@ const ChatList = () => {
           onRefresh={loadConversations}
         />
       )}
-      <Modalize ref={usersRef} modalHeight={600}>
+      <Modalize
+        ref={usersRef}
+        modalHeight={600}
+        scrollViewProps={{
+          showsVerticalScrollIndicator: false,
+          scrollEnabled: false,
+        }}
+      >
         <View className="p-4">
           <Text className="text-xl font-semibold mb-4">Start New Chat</Text>
 

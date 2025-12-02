@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -21,10 +23,12 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [Refreshing, setRefreshing] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    refreshSession();
     const handleUrl = async (event) => {
       const url = event.url;
       console.log("URL received:", url);
@@ -75,6 +79,28 @@ const Login = () => {
       subscription.remove();
     };
   }, []);
+  const refreshSession = async () => {
+    try {
+      setRefreshing(true);
+
+      // Try getting current active session
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.log("Session refresh error:", error);
+        return;
+      }
+
+      // If user is already logged in, redirect them
+      if (data?.session) {
+        router.replace("/(tab)/home");
+      }
+    } catch (e) {
+      console.log("Refresh error:", e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleLogin = async () => {
     try {
@@ -191,13 +217,16 @@ const Login = () => {
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "white",
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "white" }}
+      contentContainerStyle={{
+        flexGrow: 1,
         padding: 24,
         justifyContent: "center",
       }}
+      refreshControl={
+        <RefreshControl refreshing={Refreshing} onRefresh={refreshSession} />
+      }
     >
       {/* Header */}
       <Text
@@ -331,7 +360,7 @@ const Login = () => {
           Register
         </Link>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
