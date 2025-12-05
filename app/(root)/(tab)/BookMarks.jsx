@@ -77,7 +77,11 @@ const BookmarksScreen = () => {
           )}
           ListHeaderComponent={() => (
             <View>
-              <Goback title="Your Bookmarked Posts" router={router} />
+              <Goback
+                fontColor={"text-orange-600"}
+                title="Bookmarks"
+                router={router}
+              />
             </View>
           )}
         />

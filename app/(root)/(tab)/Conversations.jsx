@@ -102,16 +102,16 @@ const ChatList = () => {
     try {
       // Navigate to chat first (user experience)
       router.push(`/(Chats)/${otherUser.id}`);
-
+      if (lastMessage.senderid == currentUser?.id) {
+        return;
+      }
       // Only update if message is unread
       if (!lastMessage.isread) {
         const update = {
           isread: true,
           updatedat: new Date().toISOString(),
         };
-
         const result = await updateChats(lastMessage.id, update);
-
         if (result.success) {
           console.log("Chat updated:", result.data);
         } else {
@@ -128,6 +128,8 @@ const ChatList = () => {
     const lastMessage = item.last_message;
     const unreadCount = item.unread_count || 0;
     const sender = item.last_message.senderid === currentUser?.id;
+    const isLastMessageFromCurrentUser =
+      item.last_message.senderid === currentUser?.id;
 
     return (
       <TouchableOpacity
@@ -156,17 +158,41 @@ const ChatList = () => {
             </Text>
           )}
         </View>
+
+        {/* Right side indicators */}
+        <View className="flex-row items-center">
+          {/* Single tick icon for messages sent by current user */}
+          {isLastMessageFromCurrentUser && unreadCount === 0 && (
+            <View className="mr-1">
+              {/* You can use an icon library or custom SVG */}
+              {/* Option 1: Using Ionicons (common in React Native) */}
+              <Feather
+                name="check"
+                size={16}
+                color={lastMessage.isread ? "#4F46E5" : "#9ca3af"}
+              />
+
+              {/* Option 2: Using FontAwesome for double ticks */}
+              {/* <Icon 
+                  name={lastMessage.isread ? "check-double" : "check"} 
+                  size={16} 
+                  color={lastMessage.isread ? "#4F46E5" : "#9ca3af"} 
+                /> */}
+            </View>
+          )}
+        </View>
         {/* Unread count badge */}
-        {unreadCount > 0 && (
+        {!isLastMessageFromCurrentUser && unreadCount > 0 && (
           <View className="bg-orange-500 min-w-5 h-5 rounded-full items-center justify-center">
             <Text className="text-white text-xs font-bold px-1">
               {unreadCount > 99 ? "99+" : unreadCount}
             </Text>
           </View>
         )}
+        {/*
         {unreadCount === 0 && (
           <Feather name="chevron-right" size={20} color="#9ca3af" />
-        )}
+        )}*/}
       </TouchableOpacity>
     );
   };

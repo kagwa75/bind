@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
-const goback = ({ title, router, font }) => {
+const goback = ({ title, router, font, fontColor }) => {
   return (
     <View className="flex flex-row gap-4 justify-start items-center px-4 py-8">
       <TouchableOpacity
@@ -11,7 +11,7 @@ const goback = ({ title, router, font }) => {
         <Feather name="arrow-left" size={24} color="black" />
       </TouchableOpacity>
       <Text
-        className={`text-gray-500 mt-2  ${font ? font : "text-lg font-semibold"}`}
+        className={`${fontColor ? fontColor : "text-gray-500"}  mt-2  ${font ? font : "text-lg font-semibold"}`}
       >
         {title}
       </Text>

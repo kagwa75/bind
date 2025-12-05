@@ -143,6 +143,7 @@ const CreatePost = () => {
     <ScrollView className="flex-1 bg-white p-4">
       {/* Header */}
       <Goback
+        fontColor={"text-orange-600"}
         title="Create Post"
         router={router}
         font="font-semibold text-2xl"

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "messager",
-    "slug": "messager",
+    "name": "",
+    "slug": "Bind",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/react-logo@3x.png",
+    "icon": "./assets/images/Bind_logo.png",
     "scheme": "messager",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/Bind_logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -22,14 +22,14 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/Bind_logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/Bind_logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
