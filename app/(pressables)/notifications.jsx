@@ -62,9 +62,9 @@ const notifications = () => {
         </View>
       ) : (
         <>
-          <View>
+          <ScrollView className="mb-8" showsVerticalScrollIndicator={false}>
             <Goback title="Your Notifications Currently" router={router} />
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <View>
               {notificationList.map((item) => {
                 return (
                   <NotificationCard
@@ -74,8 +74,8 @@ const notifications = () => {
                   />
                 );
               })}
-            </ScrollView>
-          </View>
+            </View>
+          </ScrollView>
         </>
       )}
     </View>

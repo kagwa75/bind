@@ -16,8 +16,8 @@ import { useGlobalContext } from "../../../lib/GlobalProvider";
 import {
   getAllUsers,
   getChatConversations,
+  markAllMessagesAsRead,
   supabase,
-  updateChats,
 } from "../../../lib/supabase";
 
 const ChatList = () => {
@@ -32,6 +32,14 @@ const ChatList = () => {
     if (currentUser?.id) {
       loadConversations();
     }
+    return;
+  }, [currentUser?.id, usersRef]);
+
+  //subscription useEffect
+  useEffect(() => {
+    if (!currentUser?.id) {
+      return;
+    }
     // Subscribe to new changes
     const subscription = supabase
       .channel("chat-changes")
@@ -44,7 +52,13 @@ const ChatList = () => {
           filter: `or(senderid.eq.${currentUser.id},receiverid.eq.${currentUser.id})`,
         },
         (payload) => {
-          loadConversations();
+          if (
+            payload.eventType === "INSERT" ||
+            payload.eventType === "UPDATE"
+          ) {
+            // Refresh conversations list
+            loadConversations();
+          }
         },
       )
       .subscribe();
@@ -52,7 +66,7 @@ const ChatList = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [currentUser?.id, usersRef]);
+  }, [currentUser]);
   //modal
   const openModal = () => {
     usersRef.current?.open();
@@ -98,24 +112,27 @@ const ChatList = () => {
   const formatName = (user) => {
     return user?.name || user?.email?.split("@")[0] || "Unknown User";
   };
-  const openChat = async (otherUser, lastMessage) => {
+  const openChat = async (otherUser, lastMessage, unreadCount) => {
     try {
       // Navigate to chat first (user experience)
       router.push(`/(Chats)/${otherUser.id}`);
       if (lastMessage.senderid == currentUser?.id) {
         return;
       }
-      // Only update if message is unread
-      if (!lastMessage.isread) {
-        const update = {
-          isread: true,
-          updatedat: new Date().toISOString(),
-        };
-        const result = await updateChats(lastMessage.id, update);
+      // Mark ALL unread messages as read if there are any
+      if (unreadCount > 0) {
+        const result = await markAllMessagesAsRead(
+          currentUser.id,
+          otherUser.id,
+        );
+
         if (result.success) {
-          console.log("Chat updated:", result.data);
+          console.log(`${unreadCount} messages marked as read`);
+          // Update local state/context to reflect the change
+          // This will remove the badge from the UI immediately
+          loadConversations();
         } else {
-          console.error("Failed to update chat:", result.error);
+          console.warn("Failed to mark messages as read:", result.error);
         }
       }
     } catch (error) {
@@ -133,7 +150,7 @@ const ChatList = () => {
 
     return (
       <TouchableOpacity
-        onPress={() => openChat(otherUser, lastMessage)}
+        onPress={() => openChat(otherUser, lastMessage, unreadCount)}
         className="flex-row items-center p-4 border-b border-gray-100 bg-white"
       >
         <Avatar uri={otherUser?.image} size={60} />

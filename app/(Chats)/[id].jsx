@@ -115,7 +115,8 @@ const ChatRoom = () => {
       });
 
       if (result.success) {
-        const newChatObj = {
+        {
+          /* const newChatObj = {
           id: result.id,
           content: newChat.trim(),
           createdat: new Date().toISOString(),
@@ -124,8 +125,9 @@ const ChatRoom = () => {
             name: currentUser?.name || "User",
             image: currentUser?.image,
           },
-        };
-        setChats((prev) => [...prev, newChatObj]);
+        };*/
+        }
+        openChats();
         setNewChat("");
 
         if (currentUser.id !== id) {
