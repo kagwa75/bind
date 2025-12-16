@@ -173,8 +173,8 @@ const Login = () => {
         const params = new URLSearchParams(url.split("#")[1]);
         const accessToken = params.get("access_token");
         const refreshToken = params.get("refresh_token");
-
-        if (accessToken && refreshToken) {
+        console.log("Tokens", accessToken, refreshToken);
+        if (accessToken) {
           // Set the session manually
           const { data: sessionData, error: sessionError } =
             await supabase.auth.setSession({
@@ -183,7 +183,7 @@ const Login = () => {
             });
           if (sessionError) throw sessionError;
 
-          console.log("OAuth session set successfully");
+          console.log("OAuth session set successfully", sessionData);
           // Wait a moment for GlobalProvider to detect the session
           setTimeout(() => {
             router.replace("/(tab)/home");

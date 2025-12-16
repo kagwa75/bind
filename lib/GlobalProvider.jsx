@@ -88,66 +88,7 @@ export const GlobalProvider = ({ children }) => {
     };
 
     initAuth();
-
-    // Load persisted user profile on app start
-    const loadPersistedProfile = async () => {
-      try {
-        const storedProfile = await storage.getItem("userProfile");
-        if (storedProfile) {
-          setUserProfile(JSON.parse(storedProfile));
-        }
-      } catch (error) {
-        console.error("Failed to load persisted profile:", error);
-      }
-    };
-
-    loadPersistedProfile();
-
-    // Subscribe to auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        await storage.setItem("supabaseUser", JSON.stringify(session.user));
-
-        // Fetch and set user profile on auth change
-        const profileData = await fetchUserProfile(session.user.id);
-        if (profileData) {
-          setUserProfile(profileData);
-          await storage.setItem("userProfile", JSON.stringify(profileData));
-        }
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        await storage.removeItem("supabaseUser");
-        await storage.removeItem("userProfile");
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
-
-  const setUserData = async (userData) => {
-    try {
-      // Update both user auth data and profile data
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      setUserProfile(userData);
-
-      // Store both in storage
-      if (userData) {
-        await storage.setItem("supabaseUser", JSON.stringify(updatedUser));
-        await storage.setItem("userProfile", JSON.stringify(userData));
-      }
-      setAuthError(null);
-    } catch (error) {
-      console.error("Failed to set user data:", error);
-      setAuthError("Failed to update user data");
-    }
-  };
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -160,7 +101,6 @@ export const GlobalProvider = ({ children }) => {
   const value = {
     user: { ...user, ...userProfile }, // Merge auth user and profile data
     userProfile, // Also provide profile separately if needed
-    setUserData,
     logout,
     isLoading,
     error: authError,

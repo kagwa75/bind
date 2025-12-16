@@ -1,9 +1,9 @@
-import moment from "moment";
 import { Text, TouchableOpacity, View } from "react-native";
 import Avatar from "./avatar";
+import { markAllMessagesAsRead } from "../lib/supabase";
 
 const NotificationCard = ({ item, router }) => {
-  const createdAt = moment(item?.createdat).format("MMM d");
+  const createdAt = item?.createdat;
 
   // Safe data extraction with fallbacks
   const userName = item?.users?.name || "Unknown User";
@@ -14,12 +14,21 @@ const NotificationCard = ({ item, router }) => {
       ? JSON.parse(item?.data || "{}")
       : item?.data || {};
 
-  const handlePress = () => {
+  const handlePress = async () => {
     if (item?.data?.postId) {
       router.push(`/(Notificationpost)/${item.data.postId}`);
     } else if (notificationData.chatId || notificationData.receiverid) {
       // Navigate to chat with the sender
       router.push(`/(Chats)/${item.senderid}`);
+      const result = await markAllMessagesAsRead(
+        notificationData.receiverid,
+        item.senderid,
+      );
+      if (result.success) {
+        return;
+      } else {
+        console.error(result.error);
+      }
     }
   };
 
@@ -34,7 +43,7 @@ const NotificationCard = ({ item, router }) => {
           <Text className="font-semibold">{userName}</Text>
           <Text className="text-gray-600">{title}</Text>
         </View>
-        <Text className="text-gray-400 text-xs">{createdAt}</Text>
+        <Text className="text-gray-400 text-xs p-4">{createdAt}</Text>
       </TouchableOpacity>
     </>
   );

@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Sharing from "expo-sharing";
 import { useVideoPlayer, VideoView } from "expo-video";
 import moment from "moment";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -45,9 +45,10 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
   const [bookMarkCount, setBookMarkCount] = useState(
     Array.isArray(item?.bookmarks) ? item.bookmarks.length : 0,
   );
-  const [bookmarked, setBookmarked] = useState(
-    safeBookmarks.some((b) => b.userid === currentUser?.id),
+  const initialBookmarked = safeBookmarks.some(
+    (b) => b.userid === currentUser?.id,
   );
+  const [bookmarked, setBookmarked] = useState(initialBookmarked);
 
   const [commentsCount, setCommentsCount] = useState(safeComments.length);
   const [loading, setLoading] = useState(false);
@@ -55,6 +56,12 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
   const [newComment, setNewComment] = useState("");
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      return;
+    }
+  }, [item]);
 
   const viewShotRef = useRef(null);
   const playerRef = useRef(null);
@@ -79,9 +86,7 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
   );
 
   const handleLike = async () => {
-    const alreadyLiked = safePostLikes.some(
-      (like) => like.userid === currentUser?.id,
-    );
+    const alreadyLiked = liked;
 
     if (alreadyLiked) {
       const res = await removeLikes(currentUser?.id, item?.id);
@@ -200,9 +205,8 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
   };
 
   const handleBookmarks = async () => {
-    const alreadyBookmarked = safeBookmarks.some(
-      (bookmark) => bookmark.userid === currentUser?.id,
-    );
+    const alreadyBookmarked = bookmarked;
+
     if (alreadyBookmarked) {
       const { success, error } = await removeBookmark(
         currentUser?.id,

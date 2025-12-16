@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Avatar from "../../components/avatar";
 import PostCardWUser from "../../components/PostCardWUser";
-import { fetchPosts, getUser } from "../../lib/supabase";
+import { fetchPosts, getUser, markAllMessagesAsRead } from "../../lib/supabase";
 
 const ProfileDetails = () => {
   const { id } = useLocalSearchParams();
@@ -50,6 +50,19 @@ const ProfileDetails = () => {
     } catch (error) {
       console.error("Error fetching posts:", error);
       Alert.alert("An error occurred while fetching the user posts");
+    }
+  };
+  const openChat = async () => {
+    router.push(`/(Chats)/${id}`);
+    try {
+      const result = await markAllMessagesAsRead(id, user?.id);
+      if (result.success) {
+        return;
+      } else {
+        console.error(result.error);
+      }
+    } catch (error) {
+      console.error("failed to mark your messages", error);
     }
   };
 
@@ -119,7 +132,7 @@ const ProfileDetails = () => {
 
       <View className="flex items-center">
         <TouchableOpacity
-          onPress={() => router.push(`/(Chats)/${id}`)}
+          onPress={() => openChat()}
           className="bg-slate-400 w-20  items-center rounded-xl p-4"
         >
           <Feather name="send" size={20} />

@@ -11,7 +11,7 @@ const Home = () => {
   const { user } = useGlobalContext();
   const [posts, setPosts] = useState([]);
   const [limit, setLimit] = useState(10);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const hasSubscribed = useRef(false); // prevents duplicate subscriptions
 

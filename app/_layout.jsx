@@ -21,14 +21,15 @@ const Layout = () => {
 };
 
 const RootLayout = () => {
-  const { user, isLoading, isLoggedIn } = useGlobalContext();
+  const { user, isLoading, isLoggedIn, userProfile } = useGlobalContext();
 
   useEffect(() => {
     if (isLoading) return; // wait until auth state is resolved
     console.log("Auth user:", user);
-    if (!user || !isLoggedIn) {
+    if (!user || !userProfile) {
       router.replace("/(auth)/Welcome");
     } else {
+      console.log("Auth user:", user);
       router.replace("/(tab)/home");
     }
   }, [user, isLoading]);

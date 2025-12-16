@@ -10,7 +10,7 @@ const BookmarksScreen = () => {
   const router = useRouter();
   const { user } = useGlobalContext();
   const [bookmarks, setBookmarks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const getUserBookmarks = async () => {
     setLoading(true);
@@ -75,6 +75,10 @@ const BookmarksScreen = () => {
               hasShadow
             />
           )}
+          refreshing={loading}
+          onRefresh={() => {
+            getUserBookmarks();
+          }}
           ListHeaderComponent={() => (
             <View>
               <Goback
