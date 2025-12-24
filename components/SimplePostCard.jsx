@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import * as Sharing from "expo-sharing";
 import { useVideoPlayer, VideoView } from "expo-video";
 import moment from "moment";
@@ -275,11 +276,20 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
           {/* Header */}
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center gap-3">
-              <Avatar size={40} uri={item?.users?.image} />
+              <TouchableOpacity
+                onPress={() => router.push(`/(profile)/${item.users.id}`)}
+              >
+                <Avatar size={40} uri={item?.users?.image} />
+              </TouchableOpacity>
+
               <View>
-                <Text className="font-semibold text-base">
-                  {item?.users?.name}
-                </Text>
+                <TouchableOpacity
+                  onPress={() => router.push(`/(profile)/${item.users.id}`)}
+                >
+                  <Text className="font-semibold text-base">
+                    {item?.users?.name}
+                  </Text>
+                </TouchableOpacity>
                 <Text className="text-gray-500 text-xs">{createdAt}</Text>
               </View>
             </View>
@@ -319,12 +329,12 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
               className="flex-row items-center gap-1"
               onPress={handleLike}
             >
-              <Feather
-                name="heart"
-                size={20}
-                color={liked ? "#ef4444" : "#9ca3af"}
-                fill={liked ? "#ef4444" : "transparent"}
-              />
+              {liked ? (
+                <FontAwesome name="heart" size={24} color="#ea580c" />
+              ) : (
+                <Feather name="heart" size={20} color={"#9ca3af"} />
+              )}
+
               <Text className="text-gray-600 text-sm">{likesCount}</Text>
             </TouchableOpacity>
 
@@ -394,7 +404,7 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
                   value={newComment}
                   onChangeText={setNewComment}
                   placeholder="Write a comment..."
-                  className="flex-1 ml-3 bg-gray-100 rounded-full px-4 py-2"
+                  className="flex-1 ml-3 text-gray-700 bg-gray-100 rounded-full px-4 py-2"
                   multiline
                 />
                 <TouchableOpacity

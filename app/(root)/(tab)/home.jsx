@@ -5,7 +5,11 @@ import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import ProfilePic from "../../../components/ProfilePic";
 import SimplePostCard from "../../../components/SimplePostCard";
 import { useGlobalContext } from "../../../lib/GlobalProvider";
-import { fetchPosts, supabase } from "../../../lib/supabase";
+import {
+  fetchNotificationsLength,
+  fetchPosts,
+  supabase,
+} from "../../../lib/supabase";
 
 const Home = () => {
   const { user } = useGlobalContext();
@@ -14,6 +18,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const hasSubscribed = useRef(false); // prevents duplicate subscriptions
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Subscribe to realtime ONLY once
   useEffect(() => {
@@ -36,6 +41,29 @@ const Home = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+  //notification realtime update
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel("notification-count")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT,UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `receiveid=eq.${user.id}`,
+        },
+        async () => {
+          const res = await fetchNotificationsLength(user.id);
+          if (res.success) setUnreadCount(res.data);
+        },
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user?.id]);
 
   // Fetch posts WHEN limit changes
   useEffect(() => {
@@ -58,6 +86,19 @@ const Home = () => {
     }
   }
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const getNotificationsCount = async () => {
+      const res = await fetchNotificationsLength(user.id);
+      if (res.success) {
+        setUnreadCount(res.data);
+      }
+    };
+
+    getNotificationsCount();
+  }, [user]);
+
   return (
     <View className="flex-1 bg-[#FAFAFA] pt-4">
       {/* Top Header */}
@@ -66,6 +107,16 @@ const Home = () => {
 
         <View className="flex flex-row items-center gap-4 p-2">
           <Pressable onPress={() => router.push("/(pressables)/notifications")}>
+            {unreadCount > 0 && (
+              <View
+                className="absolute -top-1 -right-3 min-w-[18px] h-[18px] px-1
+                 bg-orange-600 rounded-full items-center justify-center"
+              >
+                <Text className="text-white text-xs font-bold">
+                  {unreadCount}
+                </Text>
+              </View>
+            )}
             <Feather name="bell" size={22} color="black" />
           </Pressable>
 
@@ -89,7 +140,6 @@ const Home = () => {
         refreshing={isLoading}
         onRefresh={() => {
           setLimit(10); // reset pagination on refresh
-          fetchData();
         }}
         onEndReached={() => setLimit((prev) => prev + 10)}
         onEndReachedThreshold={0.5}
