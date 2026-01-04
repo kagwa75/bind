@@ -270,7 +270,7 @@ const SimplePostCard = ({ item, router, currentUser, hasShadow }) => {
         <View
           className={`bg-gray-300 border border-gray-200 ${
             hasShadow ? "shadow-lg" : ""
-          } gap-6 mb-6 rounded-xl p-5`}
+          } gap-6 mb-6 rounded-xl p-5 ${Platform.OS === "web" && "w-96"}`}
           style={hasShadow ? shadowStyles : {}}
         >
           {/* Header */}

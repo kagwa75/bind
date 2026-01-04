@@ -5,14 +5,16 @@ import {
   actions,
 } from "react-native-pell-rich-editor";
 
-
-
 // Custom toolbar icons with better styling
 const ToolbarIcon = ({ children, color = "#374151" }) => (
   <Text style={[styles.toolbarIcon, { color }]}>{children}</Text>
 );
 
-const TextEditor = ({ editorRef, onChange, placeholder = "What's on your mind?" }) => {
+const TextEditor = ({
+  editorRef,
+  onChange,
+  placeholder = "What's on your mind?",
+}) => {
   const handleChange = (content) => {
     onChange(content);
   };

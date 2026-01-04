@@ -1,22 +1,27 @@
-if (typeof window === "undefined") {
-  global.window = {};
-  global.document = {};
-}
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler"; // 👈 import
+import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import GlobalProvider, { useGlobalContext } from "../lib/GlobalProvider";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Layout = () => {
+  const colorScheme = useColorScheme();
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GlobalProvider>
-        <RootLayout />
-      </GlobalProvider>
-    </GestureHandlerRootView>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <GlobalProvider>
+          <RootLayout />
+        </GlobalProvider>
+      </GestureHandlerRootView>
+    </ThemeProvider>
   );
 };
 
@@ -32,7 +37,7 @@ const RootLayout = () => {
       console.log("Auth user:", user);
       router.replace("/(tab)/home");
     }
-  }, [user, isLoading]);
+  }, [isLoading]);
 
   return (
     <Stack

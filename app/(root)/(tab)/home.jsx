@@ -30,7 +30,13 @@ const Home = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },
         () => {
-          fetchData(); // refetch posts on any change
+          if (
+            payload.eventType === "INSERT" ||
+            payload.eventType === "UPDATE"
+          ) {
+            // Refresh posts
+            fetchData();
+          }
         },
       )
       .subscribe();
@@ -138,9 +144,7 @@ const Home = () => {
           <SimplePostCard item={item} currentUser={user} router={router} />
         )}
         refreshing={isLoading}
-        onRefresh={() => {
-          setLimit(10); // reset pagination on refresh
-        }}
+        onRefresh={fetchData}
         onEndReached={() => setLimit((prev) => prev + 10)}
         onEndReachedThreshold={0.5}
       />
